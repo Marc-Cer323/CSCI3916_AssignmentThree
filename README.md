@@ -1,10 +1,75 @@
-# Assignment Three
-## Purpose
-The purpose of this assignment is to get comfortable working with a NoSQL database (MongoDB). 
+# CSCI3916 Assignment Three - Movie API
 
-For this assignment you will create a Users collection to store users for your signup and signin methods.  You will pass Username, Name and Password as part of signup.  To get a token you will call SingIn with username and password only.  The token should include the Name and UserName (not password)
+## Deployment Links
+- **API (Render):** https://csci3916-assignmentthree.onrender.com
+- **React Site (Netlify):** https://csci3916-hw3-react.netlify.app
 
-You will also create Movies collection to store information about movies.  All endpoints will be protected with the JWT token received by a signin call. 
+## GitHub Repositories
+- **API:** https://github.com/Marc-Cer323/CSCI3916_AssignmentThree
+- **React:** https://github.com/Marc-Cer323/CSC3916_REACT19
+
+---
+
+## API Routes
+
+| Route | GET | POST | PUT | DELETE |
+|---|---|---|---|---|
+| `/movies` | Return all movies | Save a single movie | 405 - Not Allowed | 405 - Not Allowed |
+| `/movies/:movieparameter` | Return specific movie by title | 405 - Not Allowed | Update specific movie by title | Delete specific movie by title |
+
+### Authentication Routes
+| Route | Method | Description |
+|---|---|---|
+| `/signup` | POST | Register a new user |
+| `/signin` | POST | Login and receive JWT token |
+
+---
+
+## Postman Collection
+
+Import `postman_collection.json` from this repository into Postman to run all tests.
+
+### Tests Included
+- ✅ Signup a new user (random username/password in pre-request script)
+- ✅ Signin and store JWT token as collection variable
+- ✅ GET all movies
+- ✅ GET specific movie by title
+- ✅ POST save a new movie
+- ✅ PUT update a movie
+- ✅ DELETE a movie
+- ✅ Error: Duplicate user signup
+- ✅ Error: Movie missing required actors
+- ✅ Error: PUT on /movies (405 not allowed)
+- ✅ Error: Movie not found (404)
+
+### How to Import & Run
+1. Download `postman_collection.json` from this repo
+2. Open Postman → **Import** → select the file
+3. Run **Auth** folder first (Signup → Signin) to generate JWT token
+4. Run **Movies** folder to test all CRUD operations
+
+---
+
+## Movie Schema
+```javascript
+{
+  title: { type: String, required: true, index: true },
+  releaseDate: { type: Number, min: 1900, max: 2100 },
+  genre: { type: String, enum: ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Mystery', 'Thriller', 'Western', 'Science Fiction'] },
+  actors: [{ actorName: String, characterName: String }]
+}
+```
+
+## User Schema
+```javascript
+{
+  name: String,
+  username: { type: String, unique: true },
+  password: String  // hashed with bcrypt
+}
+```
+
+---
 
 ## Requirements
 Create a collection in MongoDB to hold information about movies
@@ -19,54 +84,15 @@ Create a collection in MongoDB to hold information about movies
 - Create a NodeJS Web API to interact with your database
     - Follow best practices (e.g. /movies collection)
     - Your API should support all CRUD operations (through HTTP POST, PUT, DELETE, GET)
-    - Ensure incoming entities contain the necessary information.  For example if the movie does not contain actors, the entity should not be created and an error should be returned 
+    - Ensure incoming entities contain the necessary information. For example if the movie does not contain actors, the entity should not be created and an error should be returned
 - All endpoints should be protected with a JWT token (implement signup, and signin)
     - For this assignment you must implement a User database in Mongo
         - name
-        - username 
+        - username
         - password (should be hashed)
     - If username exists the endpoint should return an error that the user already exists
     - JWT secret needs to be stored in an environment variable
-- Update the Pre-React CSC3916_REACT placeholder project to support /signup and /signin methods.  The React Single Page App should use your Assignment 3 API to support those two operations.
-
-## Submissions
-- All source code should be stored on github (remember .gitignore for node_modules)
-- API needs to be deployed to heroku or render
-- React Website that allows user to signup and singin (we did this in class)
-- PostMan test collection that 
-    - Signs Up a user (create a random user name and random password in your pre-test)
-    - SignIn a User – parse token and store in postman environment variable
-    - A separate call for each endpoint (save a movie, update a movie, delete a movie and get a movie)
-    - Test error conditions (user already exists)
-        - SignUp (user already exist)
-        - Save Movie (missing information like actors (must be at least three), title, year or Genre)
-
-- Create a readme.md at the root of your github repository with the embedded (markdown) to your test collection
-    - Within the collection click the (…), share collection -> Embed
-    - Static Button
-    - Click update link
-    - Include your environment settings
-    - Copy to clipboard 
-- Submit the Url to canvas with the REPO CSC_3916
-- Note: All tests should be testing against your Heroku or Render endpoint
-
-| Route | GET | POST | PUT | DELETE |
-| --- | --- | --- | --- | --- |
-| movies | Return all movies| save a single movie | FAIL | FAIL |
-| movies/:movieparameter | Return a specific movie based on the :movieparameter | FAIL | Update the specific movie based on the :movieparameter in your case it’s the title | Delete the specific movie based on the :movieparamters your case it’s the title |*
-
-* If Query String (Later Homework) reviews=true aggregate in reviews |
-
-## Rubic
-- -5 for missing REACT site (-2 if you are not able to signup or signin on the react site) that is all we implemented
-- -1 for MovieSchema missing any of the attributes (array of actors, genre, year released or title)
-- -2 for missing routes for /movies (POST/PUT/DELETE/GET)
-- -1 for missing authentication on routes
-- -2 for not deployed on Heroku/Render
-- -1 missing Test error conditions
-- -1 missing PostMan tests (signup, signin, separate call for each route)
 
 ## Resources
 - https://www.mongodb.com/cloud/atlas
-- Create a Free Subscription *Amazon
-- https://render.com/docs/deploy-create-react-app **important: Environment Variable for https://github.com/AliceNN-ucdenver/CSC3916_REACT env.REACT_APP_API_URL, this weekend I will look at changes (I believe only 1 change in the actions)
+- https://render.com/docs/deploy-create-react-app
