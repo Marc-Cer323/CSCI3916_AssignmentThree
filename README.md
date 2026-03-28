@@ -42,11 +42,13 @@ Import `postman_collection.json` from this repository into Postman to run all te
 - ✅ Error: PUT on /movies (405 not allowed)
 - ✅ Error: Movie not found (404)
 
+### Run in Postman
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://www.postman.com/marc-cervantes-5200365/workspace/csci3916-spring2026/collection/52012832-ad3bfe4a-ba9d-44ed-8442-54efdb5abd22?action=share&source=copy-link&creator=52012832)
+
 ### How to Import & Run
-1. Download `postman_collection.json` from this repo
-2. Open Postman → **Import** → select the file
-3. Run **Auth** folder first (Signup → Signin) to generate JWT token
-4. Run **Movies** folder to test all CRUD operations
+1. Click the **Run in Postman** button above
+2. Run **Auth** folder first (Signup → Signin) to generate JWT token
+3. Run **Movies** folder to test all CRUD operations
 
 ---
 
