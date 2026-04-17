@@ -27,6 +27,13 @@
       "type": "string"
     }
   ],
+  "variable": [
+    {
+      "key": "movie_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
   "item": [
     {
       "name": "Auth",
@@ -442,6 +449,172 @@
               "raw": "{{base_url}}/movies/MovieThatDoesNotExist",
               "host": ["{{base_url}}"],
               "path": ["movies", "MovieThatDoesNotExist"]
+            }
+          }
+        }
+      ]
+    }
+    ,
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "GET Movie with Reviews (?reviews=true)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response includes movie and reviews array', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('title');",
+                  "    pm.expect(json).to.have.property('reviews');",
+                  "    pm.expect(json.reviews).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "{{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/movies/Inception?reviews=true",
+              "host": ["{{base_url}}"],
+              "path": ["movies", "Inception"],
+              "query": [{ "key": "reviews", "value": "true" }]
+            }
+          }
+        },
+        {
+          "name": "POST Save Review",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Get movie ID first",
+                  "const baseUrl = pm.collectionVariables.get('base_url');",
+                  "const token = pm.collectionVariables.get('jwt_token');",
+                  "pm.sendRequest({",
+                  "    url: baseUrl + '/movies/Inception',",
+                  "    method: 'GET',",
+                  "    header: { 'Authorization': token }",
+                  "}, function (err, res) {",
+                  "    if (!err) {",
+                  "        const movie = res.json();",
+                  "        pm.collectionVariables.set('movie_id', movie._id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Review created message returned', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.message).to.equal('Review created!');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "{{jwt_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": \"{{movie_id}}\",\n  \"username\": \"{{random_username}}\",\n  \"review\": \"An absolutely stunning and unforgettable film!\",\n  \"rating\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["reviews"]
+            }
+          }
+        },
+        {
+          "name": "Error - Invalid Movie Request (not in DB)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Movie not found error returned', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.message).to.include('not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "{{jwt_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/movies/MovieThatDoesNotExist",
+              "host": ["{{base_url}}"],
+              "path": ["movies", "MovieThatDoesNotExist"]
+            }
+          }
+        },
+        {
+          "name": "Error - Invalid Save Review (movie not in DB)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Movie not found error returned for review', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.message).to.include('not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "{{jwt_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": \"000000000000000000000000\",\n  \"username\": \"testuser\",\n  \"review\": \"This movie does not exist\",\n  \"rating\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["reviews"]
             }
           }
         }
