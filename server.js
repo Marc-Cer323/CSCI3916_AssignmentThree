@@ -8,6 +8,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const User = require('./Users');
 const Movie = require('./Movies');
+const Review = require('./Reviews');
 
 // Connect to MongoDB
 mongoose.connect(process.env.DB)
@@ -175,11 +176,30 @@ router.route('/movies')
 router.route('/movies/:movieparameter')
     .get(authJwtController.isAuthenticated, async (req, res) => {
         try {
-            const movie = await Movie.findOne({ title: req.params.movieparameter });
-            if (!movie) {
-                return res.status(404).json({ success: false, message: 'Movie not found.' });
+            if (req.query.reviews === 'true') {
+                // Aggregate movie with its reviews using $lookup
+                const movie = await Movie.aggregate([
+                    { $match: { title: req.params.movieparameter } },
+                    {
+                        $lookup: {
+                            from: 'reviews',
+                            localField: '_id',
+                            foreignField: 'movieId',
+                            as: 'reviews'
+                        }
+                    }
+                ]);
+                if (!movie || movie.length === 0) {
+                    return res.status(404).json({ success: false, message: 'Movie not found.' });
+                }
+                res.status(200).json(movie[0]);
+            } else {
+                const movie = await Movie.findOne({ title: req.params.movieparameter });
+                if (!movie) {
+                    return res.status(404).json({ success: false, message: 'Movie not found.' });
+                }
+                res.status(200).json(movie);
             }
-            res.status(200).json(movie);
         } catch (err) {
             res.status(500).json({ success: false, message: err.message });
         }
@@ -209,6 +229,38 @@ router.route('/movies/:movieparameter')
                 return res.status(404).json({ success: false, message: 'Movie not found.' });
             }
             res.status(200).json({ success: true, message: 'Movie deleted successfully.' });
+        } catch (err) {
+            res.status(500).json({ success: false, message: err.message });
+        }
+    });
+
+// /reviews routes
+router.route('/reviews')
+    .get(authJwtController.isAuthenticated, async (req, res) => {
+        try {
+            const reviews = await Review.find();
+            res.status(200).json(reviews);
+        } catch (err) {
+            res.status(500).json({ success: false, message: err.message });
+        }
+    })
+    .post(authJwtController.isAuthenticated, async (req, res) => {
+        const { movieId, username, review, rating } = req.body;
+
+        if (!movieId || !username || !review || rating === undefined) {
+            return res.status(400).json({ success: false, message: 'Review must include movieId, username, review, and rating.' });
+        }
+
+        try {
+            // Check if movie exists
+            const movie = await Movie.findById(movieId);
+            if (!movie) {
+                return res.status(404).json({ success: false, message: 'Movie not found.' });
+            }
+
+            const newReview = new Review({ movieId, username, review, rating });
+            await newReview.save();
+            res.status(201).json({ message: 'Review created!' });
         } catch (err) {
             res.status(500).json({ success: false, message: err.message });
         }
